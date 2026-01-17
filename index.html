@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechAdvisor Pro - Finansal & Teknik Karar Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #1e293b;
+            /* Prevent bounce on mobile */
+            overscroll-behavior-y: none;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #e2e8f0;
+        }
+        
+        .option-card:active {
+            transform: scale(0.98);
+        }
+
+        .option-card:hover {
+            border-color: #64748b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-card.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .option-checkbox {
+            transition: all 0.2s;
+        }
+        
+        .selected .option-checkbox {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; transform: translateY(15px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .specs-table tr:nth-child(even) { background-color: #f8fafc; }
+        .specs-table tr:hover { background-color: #e0e7ff; }
+
+        /* Security Badge Animation */
+        @keyframes shield-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .security-badge { animation: shield-pulse 2s infinite; }
+
+        /* Mobile specific adjustments */
+        .sticky-action-bar {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem;
+            margin-left: -1.5rem; /* Counteract padding */
+            margin-right: -1.5rem;
+            margin-bottom: -1.5rem; /* Extend to bottom */
+            z-index: 40;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        @media (min-width: 768px) {
+            .sticky-action-bar {
+                position: static;
+                background: transparent;
+                border-top: 1px solid #f1f5f9;
+                padding-top: 2rem;
+                margin: 0;
+                box-shadow: none;
+                padding-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-sm md:text-base">
+
+    <!-- Header -->
+    <header class="glass-header fixed w-full top-0 z-50 h-16 flex items-center justify-between px-4">
+        <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+            <div class="flex items-center gap-2 md:gap-3">
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2 rounded-xl shadow-lg shadow-blue-200">
+                    <i class="fa-solid fa-shield-halved text-sm md:text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-lg font-bold text-slate-800 tracking-tight leading-none">TECH ADVISOR <span class="text-blue-600">PRO</span></h1>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="relative flex h-1.5 w-1.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                        </span>
+                        <p class="text-[9px] md:text-[10px] text-slate-500 font-medium uppercase tracking-wider">SECURE CONNECTION</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono hidden md:block bg-slate-100 px-3 py-1 rounded-full">
+                ID: <span id="session-id">LOADING...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NEW: Result Scroll Progress Bar (Initially Hidden) -->
+    <div id="result-scroll-container" class="fixed top-16 left-0 w-full h-1.5 bg-slate-200 z-[60] hidden">
+        <div id="result-scroll-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-600 w-0 transition-all duration-75 ease-out shadow-[0_0_10px_rgba(37,99,235,0.5)]"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-1 pt-16 pb-0 md:pb-4 px-0 md:px-4 h-full flex flex-col max-w-7xl mx-auto w-full">
+        
+        <div id="app-card" class="bg-white md:rounded-2xl shadow-none md:shadow-xl border-t md:border border-slate-200 flex flex-col h-full overflow-hidden relative">
+            
+            <!-- PROGRESS BAR (Quiz) -->
+            <div id="progress-container" class="hidden bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-3 transition-all">
+                <div class="flex justify-between text-[10px] md:text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                    <span id="progress-step-text">Analiz Başlatılıyor</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div id="progress-fill" class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-1.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- DYNAMIC CONTENT AREA -->
+            <div id="content-area" class="flex-1 overflow-y-auto custom-scrollbar relative px-0 pb-0">
+                
+                <!-- VIEW 1: WELCOME -->
+                <div id="view-welcome" class="h-full flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto fade-in-up">
+                    <div class="mb-6 md:mb-8 relative group">
+                        <div class="absolute -inset-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition duration-1000"></div>
+                        <i class="fa-solid fa-fingerprint text-6xl md:text-7xl text-blue-600 relative z-10 drop-shadow-sm"></i>
+                    </div>
+                    
+                    <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 md:mb-6 tracking-tight">Akıllı Cihaz & Güvenlik Analizi</h2>
+                    <p class="text-sm md:text-lg text-slate-600 mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4">
+                        Bu sistem, sadece teknik özellikleri değil; <strong>bankacılık güvenliği</strong>, biyometrik tercihler ve kullanım alışkanlıklarınızı analiz eden 
+                        <strong>25 adımlı</strong> gelişmiş bir <strong>karar algoritması</strong> kullanır.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full mb-8 md:mb-12 px-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3 text-left">
+                            <div class="bg-green-100 w-8 h-8 rounded-full flex items-center justify-center text-green-600 shrink-0"><i class="fa-solid fa-building-columns"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800">Finansal Güvenlik</h4>
+                                <p class="text-[10px] md:text-xs text-slate-500">NFC & Knox/Secure Enclave</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3 text-left">
+                            <div class="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center text-blue-600 shrink-0"><i class="fa-solid fa-microchip"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800">Donanım Analizi</h4>
+                                <p class="text-[10px] md:text-xs text-slate-500">İşlemci & Sensörler</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3 text-left">
+                            <div class="bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center text-purple-600 shrink-0"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800">Canlı Piyasa</h4>
+                                <p class="text-[10px] md:text-xs text-slate-500">Anlık Fiyat Simülasyonu</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="startAnalysis()" class="w-full md:w-auto group relative inline-flex items-center justify-center px-10 py-4 font-bold text-white transition-all duration-300 bg-slate-900 text-lg rounded-xl md:rounded-2xl hover:bg-slate-800 active:scale-95 shadow-lg">
+                        <span>Analizi Başlat</span>
+                        <i class="fa-solid fa-arrow-right ml-3 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    
+                    <p class="mt-6 text-[10px] text-slate-400 uppercase tracking-widest">Sistem v3.5.2 • Okuma Takibi</p>
+                </div>
+
+                <!-- VIEW 2: QUIZ -->
+                <div id="view-quiz" class="hidden p-6 md:p-12 max-w-5xl mx-auto fade-in-up pb-20 md:pb-12">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <!-- Question Area -->
+                        <div class="flex-1">
+                            <div class="mb-6 md:mb-8">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-[10px] md:text-xs font-bold rounded-full mb-3 md:mb-4 border border-blue-100 shadow-sm">
+                                    <i id="q-icon" class="fa-solid fa-circle-question"></i>
+                                    <span id="q-category">Kategori</span>
+                                </span>
+                                <h2 id="q-text" class="text-xl md:text-3xl font-extrabold text-slate-900 mb-2 md:mb-3 leading-tight">Soru Metni</h2>
+                                <p id="q-desc" class="text-slate-500 text-sm md:text-lg">Bu soru neden soruluyor açıklaması.</p>
+                                <p id="q-multi-hint" class="hidden text-xs md:text-sm text-indigo-600 font-bold mt-3 bg-indigo-50 p-2 md:p-3 rounded-lg inline-block border border-indigo-100">
+                                    <i class="fa-solid fa-list-check mr-2"></i> Birden fazla seçenek işaretleyebilirsiniz.
+                                </p>
+                            </div>
+
+                            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
+                                <!-- Options injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Side Context (Desktop Only) -->
+                        <div class="hidden lg:block w-64 border-l border-slate-100 pl-8 pt-4">
+                            <h4 class="font-bold text-slate-400 text-xs uppercase mb-4 tracking-wider">Analiz Parametreleri</h4>
+                            <ul class="space-y-4 text-xs text-slate-500" id="context-list">
+                                <li class="flex items-center gap-2 text-slate-800 font-medium"><i class="fa-solid fa-check text-green-500"></i> Kullanıcı Profili</li>
+                                <li class="flex items-center gap-2"><i class="fa-regular fa-circle text-slate-300"></i> Güvenlik İhtiyacı</li>
+                                <li class="flex items-center gap-2"><i class="fa-regular fa-circle text-slate-300"></i> Donanım Uyumluluğu</li>
+                                <li class="flex items-center gap-2"><i class="fa-regular fa-circle text-slate-300"></i> Bütçe Optimizasyonu</li>
+                            </ul>
+                            <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <i class="fa-solid fa-lightbulb text-blue-500 mb-2 text-lg"></i>
+                                <p class="text-blue-800 text-xs leading-relaxed">
+                                    Verdiğiniz her yanıt, <strong>karar algoritmasının</strong> ağırlık puanlarını anlık olarak günceller.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BAR (Sticky on Mobile) -->
+                    <div class="sticky-action-bar flex justify-between items-center">
+                        <button onclick="prevStep()" id="btn-prev" class="group text-slate-400 hover:text-slate-800 font-semibold transition-colors hidden flex items-center gap-2 px-2 py-2">
+                            <div class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-slate-800 transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i></div>
+                            <span class="text-sm">Geri</span>
+                        </button>
+                        
+                        <button onclick="nextStep()" id="btn-next" class="hidden ml-auto bg-slate-900 hover:bg-slate-800 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-xl font-bold shadow-lg shadow-slate-200 transition-all active:scale-95 flex items-center gap-2 text-sm md:text-base w-auto">
+                            <span>Seçimi Onayla</span> <i class="fa-solid fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: SIMULATION & LOADING -->
+                <div id="view-loading" class="hidden h-full flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                    <div class="relative w-24 h-24 mb-8">
+                        <div class="absolute top-0 left-0 w-full h-full border-4 border-slate-200 rounded-full"></div>
+                        <div class="absolute top-0 left-0 w-full h-full border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+                        <i class="fa-solid fa-shield-virus absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-400 text-2xl"></i>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Güvenlik ve Performans Analizi</h3>
+                    <div id="console-log" class="font-mono text-[10px] md:text-xs text-left bg-slate-900 text-green-400 p-4 rounded-lg w-full max-w-lg h-40 overflow-hidden shadow-inner opacity-90 border border-slate-800">
+                        <!-- Simulated logs -->
+                    </div>
+                </div>
+
+                <!-- VIEW 4: RESULTS -->
+                <div id="view-results" class="hidden bg-slate-50 min-h-full">
+                    
+                    <!-- Hero Result -->
+                    <div class="bg-white p-6 md:p-10 border-b border-slate-200">
+                        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
+                            
+                            <!-- Phone Image -->
+                            <div class="lg:col-span-4 flex flex-col items-center">
+                                <div class="relative w-full max-w-xs bg-white rounded-2xl flex items-center justify-center mb-6 overflow-hidden border border-slate-200 shadow-sm group">
+                                    <!-- Image Container -->
+                                    <div class="w-full h-64 md:h-80 flex items-center justify-center bg-slate-50 p-6">
+                                        <img id="res-image" src="" alt="Phone Image" class="max-h-full max-w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/644/644458.png'; this.classList.add('opacity-50', 'p-10');">
+                                    </div>
+                                    <!-- Badge -->
+                                    <div class="absolute top-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 flex items-center gap-1">
+                                        <i class="fa-solid fa-check-double"></i> %<span id="match-rate">98</span> Uyum
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-50 rounded-xl p-5 border border-slate-200 text-center md:text-left">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tahmini Fiyat</span>
+                                        <span class="text-[10px] text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded animate-pulse">● CANLI PİYASA</span>
+                                    </div>
+                                    <div class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight" id="res-price">0 TL</div>
+                                </div>
+                            </div>
+
+                            <!-- Details & Reasoning -->
+                            <div class="lg:col-span-8">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase rounded tracking-wide border border-blue-200">Önerilen Model</span>
+                                    <span id="res-brand" class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded tracking-wide border border-slate-200">Brand</span>
+                                </div>
+                                <h1 id="res-name" class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">Model Name</h1>
+                                
+                                <!-- Security Check Box -->
+                                <div id="security-check-box" class="mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-start gap-3 hidden">
+                                    <div class="text-emerald-600 text-xl mt-1 security-badge"><i class="fa-solid fa-shield-cat"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-emerald-800 text-sm">Yüksek Güvenlik Doğrulaması</h4>
+                                        <p class="text-xs text-emerald-700 mt-1">Bu cihaz, bankacılık ve kripto işlemleriniz için donanım tabanlı güvenlik çipine (Secure Enclave / Knox) sahiptir.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Wikipedia Summary Box -->
+                                <div id="wiki-box" class="hidden mb-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm text-slate-600 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-300"></div>
+                                    <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fa-brands fa-wikipedia-w"></i> Bilgi Kartı</h4>
+                                    <p id="wiki-summary" class="leading-relaxed text-slate-500">Bilgi çekiliyor...</p>
+                                </div>
+
+                                <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl mb-8">
+                                    <h3 class="text-blue-900 font-bold text-sm mb-2 flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-line"></i> Analiz Raporu
+                                    </h3>
+                                    <p id="res-reason" class="text-blue-800 text-sm leading-relaxed">
+                                        Analysis text...
+                                    </p>
+                                </div>
+
+                                <!-- Sentiment Analysis -->
+                                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-8">
+                                    <h3 class="font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                        <i class="fa-solid fa-users-viewfinder text-purple-500"></i> Kullanıcı Deneyimi & Yorum Analizi
+                                    </h3>
+                                    <div class="flex items-center gap-6 mb-6">
+                                        <div class="flex-1">
+                                            <div class="flex justify-between text-xs mb-2">
+                                                <span class="text-slate-600 font-semibold">Memnuniyet Skoru</span>
+                                                <span class="text-slate-800 font-bold" id="sentiment-pos-val">85%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                                <div id="sentiment-bar" class="bg-gradient-to-r from-green-400 to-green-600 h-2.5 rounded-full shadow-sm" style="width: 85%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center px-6 border-l border-slate-100">
+                                            <div class="text-3xl font-extrabold text-slate-900" id="sentiment-score">4.6</div>
+                                            <div class="text-[10px] text-slate-400 font-medium">/ 5.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                        <div class="bg-green-50 text-green-900 p-3 rounded-lg border border-green-100">
+                                            <strong class="block mb-1"><i class="fa-solid fa-plus-circle mr-1"></i> Beğenilenler:</strong>
+                                            <p id="sentiment-pros" class="opacity-80">...</p>
+                                        </div>
+                                        <div class="bg-red-50 text-red-900 p-3 rounded-lg border border-red-100">
+                                            <strong class="block mb-1"><i class="fa-solid fa-minus-circle mr-1"></i> Şikayetler:</strong>
+                                            <p id="sentiment-cons" class="opacity-80">...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DETAILED SPECS TABLE -->
+                    <div class="max-w-6xl mx-auto p-6 md:p-10 border-b border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-blue-600"></i> Teknik Spesifikasyonlar
+                        </h3>
+                        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                            <table class="w-full text-sm text-left text-slate-600 specs-table min-w-[300px]">
+                                <tbody id="specs-table-body">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Alternatives Section -->
+                    <div class="max-w-6xl mx-auto p-6 md:p-10 pb-20">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">Alternatif Seçenekler</h3>
+                        <div id="alternatives-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- JS Generated -->
+                        </div>
+                        
+                        <div class="mt-16 text-center">
+                            <button onclick="location.reload()" class="bg-white border-2 border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 px-8 py-4 rounded-xl font-bold transition-all shadow-sm hover:shadow-md">
+                                <i class="fa-solid fa-rotate mr-2"></i> Yeni Analiz Başlat
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- DATA & LOGIC ENGINE -->
+    <script>
+        // --- 1. CONFIGURATION ---
+        const today = new Date();
+        document.getElementById('session-id').innerText = Math.random().toString(36).substring(7).toUpperCase();
+
+        // --- 2. EXTENDED DATABASE (Added Security & Feature Tags) ---
+        // (Data stays same as previous for brevity, Logic engine updated)
+        const phoneDatabase = [
+            {
+                id: "iphone15pro",
+                brand: "Apple",
+                name: "iPhone 15 Pro",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg",
+                basePrice: 78000,
+                os: "ios",
+                specs: { cpu: "A17 Pro", screen: "6.1' OLED 120Hz", battery: "3274 mAh", charge: "20W", storage: 128 },
+                detailedSpecs: {
+                    screenRes: "1179 x 2556 px",
+                    brightness: "2000 nits (peak)",
+                    build: "Titanyum çerçeve, Ceramic Shield",
+                    weight: "187 g",
+                    chipset: "Apple A17 Pro (3 nm)",
+                    cameraMain: "48 MP, f/1.8, 24mm (wide)",
+                    video: "4K@60fps, ProRes, 3D (Spatial)",
+                    usb: "USB Type-C 3.2 Gen 2"
+                },
+                scores: { camera_photo: 9.5, camera_video: 10, performance: 10, battery: 7, display: 9, durability: 9, value: 5, security: 10, audio: 9, service: 9 },
+                features: ["5g", "nfc", "esim", "wireless_charge", "water_ip68", "usbc", "lidar", "face_id", "secure_enclave", "stereo", "premium_build"],
+                sentiment: { base: 92, pros: "Titanyum yapı, FaceID hızı, Güvenlik", cons: "Pil günü zor çıkarıyor" },
+                updatePolicy: 6
+            },
+            {
+                id: "s24ultra",
+                brand: "Samsung",
+                name: "Galaxy S24 Ultra",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928-mint.jpg",
+                basePrice: 73000,
+                os: "android",
+                specs: { cpu: "Snapdragon 8 Gen 3", screen: "6.8' AMOLED 120Hz", battery: "5000 mAh", charge: "45W", storage: 256 },
+                detailedSpecs: {
+                    screenRes: "1440 x 3120 px",
+                    brightness: "2600 nits (peak)",
+                    build: "Titanyum, Gorilla Armor",
+                    weight: "232 g",
+                    chipset: "Snapdragon 8 Gen 3 for Galaxy",
+                    cameraMain: "200 MP, f/1.7 + 50 MP Periscope",
+                    video: "8K@30fps, 4K@120fps",
+                    usb: "USB Type-C 3.2"
+                },
+                scores: { camera_photo: 9.7, camera_video: 9, performance: 10, battery: 9, display: 10, durability: 9, value: 7, security: 10, audio: 8.5, service: 10 },
+                features: ["5g", "nfc", "esim", "wireless_charge", "water_ip68", "pen", "ai", "200mp", "finger_ultra", "knox", "stereo", "premium_build"],
+                sentiment: { base: 91, pros: "Yansımasız ekran, Knox güvenliği, S-Pen", cons: "Büyük ve köşeli" },
+                updatePolicy: 7
+            },
+            {
+                id: "xiaomi14ultra",
+                brand: "Xiaomi",
+                name: "Xiaomi 14 Ultra",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra.jpg",
+                basePrice: 69000,
+                os: "android",
+                specs: { cpu: "Snapdragon 8 Gen 3", screen: "6.73' AMOLED 120Hz", battery: "5000 mAh", charge: "90W", storage: 512 },
+                detailedSpecs: {
+                    screenRes: "1440 x 3200 px",
+                    brightness: "3000 nits",
+                    build: "Alüminyum/Titanyum, Eko Deri",
+                    weight: "219 g",
+                    chipset: "Snapdragon 8 Gen 3",
+                    cameraMain: "50 MP 1-inch sensör",
+                    video: "8K@30fps, 4K@120fps",
+                    usb: "USB Type-C 3.2 Gen 2"
+                },
+                scores: { camera_photo: 10, camera_video: 9, performance: 9.5, battery: 8, display: 9.5, durability: 8, value: 6, security: 8, audio: 9, service: 7 },
+                features: ["5g", "nfc", "wireless_charge", "water_ip68", "leica", "fast_charge", "finger_optical", "stereo", "charger_included", "premium_build"],
+                sentiment: { base: 89, pros: "Fotoğraf kalitesi, Hızlı şarj", cons: "Kamera çıkıntısı devasa" },
+                updatePolicy: 4
+            },
+            {
+                id: "honor_magic6",
+                brand: "Honor",
+                name: "Honor Magic 6 Pro",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/honor-magic6-pro.jpg",
+                basePrice: 48000,
+                os: "android",
+                specs: { cpu: "Snapdragon 8 Gen 3", screen: "6.8' OLED 120Hz", battery: "5600 mAh", charge: "80W", storage: 512 },
+                detailedSpecs: {
+                    screenRes: "1280 x 2800 px",
+                    brightness: "5000 nits (HDR)",
+                    build: "Cam/Eko Deri",
+                    weight: "225 g",
+                    chipset: "Snapdragon 8 Gen 3",
+                    cameraMain: "50 MP + 180MP Periscope",
+                    video: "4K@60fps",
+                    usb: "USB Type-C 3.1"
+                },
+                scores: { camera_photo: 9.5, camera_video: 8.5, performance: 9.5, battery: 10, display: 9.5, durability: 9, value: 9, security: 9, audio: 8.5, service: 7 },
+                features: ["5g", "nfc", "wireless_charge", "water_ip68", "face_id_3d", "fast_charge", "stereo", "charger_included", "premium_build"],
+                sentiment: { base: 90, pros: "3D Yüz Tanıma (Güvenli), Pil ömrü", cons: "Arayüz iOS'a çok benziyor" },
+                updatePolicy: 4
+            },
+            {
+                id: "nothing2a",
+                brand: "Nothing",
+                name: "Nothing Phone (2a)",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg",
+                basePrice: 22000,
+                os: "android",
+                specs: { cpu: "Dimensity 7200 Pro", screen: "6.7' AMOLED 120Hz", battery: "5000 mAh", charge: "45W", storage: 128 },
+                detailedSpecs: {
+                    screenRes: "1080 x 2412 px",
+                    brightness: "1300 nits",
+                    build: "Plastik gövde",
+                    weight: "190 g",
+                    chipset: "Mediatek Dimensity 7200 Pro",
+                    cameraMain: "50 MP, f/1.9",
+                    video: "4K@30fps",
+                    usb: "USB Type-C 2.0"
+                },
+                scores: { camera_photo: 7.5, camera_video: 7, performance: 7.5, battery: 9, display: 8, durability: 7, value: 10, security: 7, audio: 7.5, service: 6 },
+                features: ["5g", "nfc", "glyph", "clean_ui", "finger_optical", "stereo"],
+                sentiment: { base: 93, pros: "Eşsiz tasarım, Temiz yazılım", cons: "Plastik kasa" },
+                updatePolicy: 3
+            },
+            {
+                id: "a55",
+                brand: "Samsung",
+                name: "Galaxy A55",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg",
+                basePrice: 18000,
+                os: "android",
+                specs: { cpu: "Exynos 1480", screen: "6.6' AMOLED 120Hz", battery: "5000 mAh", charge: "25W", storage: 128 },
+                detailedSpecs: {
+                    screenRes: "1080 x 2340 px",
+                    brightness: "1000 nits",
+                    build: "Alüminyum çerçeve, Cam arka",
+                    weight: "213 g",
+                    chipset: "Exynos 1480",
+                    cameraMain: "50 MP, f/1.8",
+                    video: "4K@30fps",
+                    usb: "USB Type-C 2.0"
+                },
+                scores: { camera_photo: 7.5, camera_video: 7, performance: 7, battery: 9.5, display: 8.5, durability: 9, value: 9, security: 9, audio: 8, service: 10 },
+                features: ["5g", "nfc", "esim", "water_ip67", "sd_card", "finger_optical", "knox_vault", "stereo", "premium_build"],
+                sentiment: { base: 87, pros: "Knox Vault güvenliği, Malzeme kalitesi", cons: "Çerçeveler kalın" },
+                updatePolicy: 4
+            },
+            {
+                id: "redminote13pro",
+                brand: "Xiaomi",
+                name: "Redmi Note 13 Pro 5G",
+                image: "https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-note-13-pro-5g.jpg",
+                basePrice: 16500,
+                os: "android",
+                specs: { cpu: "Snapdragon 7s Gen 2", screen: "6.67' AMOLED 120Hz", battery: "5100 mAh", charge: "67W", storage: 256 },
+                detailedSpecs: {
+                    screenRes: "1220 x 2712 px",
+                    brightness: "1800 nits",
+                    build: "Plastik çerçeve",
+                    weight: "187 g",
+                    chipset: "Snapdragon 7s Gen 2",
+                    cameraMain: "200 MP, f/1.7",
+                    video: "4K@30fps",
+                    usb: "USB Type-C 2.0"
+                },
+                scores: { camera_photo: 8, camera_video: 6, performance: 6.5, battery: 8.5, display: 8.5, durability: 6, value: 10, security: 6, audio: 7.5, service: 7 },
+                features: ["5g", "nfc", "fast_charge", "jack", "200mp", "finger_optical", "stereo", "charger_included"],
+                sentiment: { base: 85, pros: "3.5mm Jack var, Ekran keskin", cons: "Video sabitleme zayıf" },
+                updatePolicy: 2
+            }
+        ];
+        
+        // Missing image fallback
+        phoneDatabase.forEach(p => {
+             if(!p.image) p.image = "https://cdn-icons-png.flaticon.com/512/644/644458.png";
+        });
+
+        // --- 3. QUESTION ENGINE (25 Questions - Updated) ---
+        const questions = [
+            // PART 1: Basics
+            { id: "budget", type: "single", category: "Temel", icon: "fa-wallet", text: "Maksimum Bütçeniz Nedir?", desc: "Seçenekleri daraltmak için başlangıç noktası.", options: [ { label: "15.000 TL - 20.000 TL", value: "low" }, { label: "20.000 TL - 35.000 TL", value: "mid" }, { label: "35.000 TL - 60.000 TL", value: "high" }, { label: "60.000 TL ve Üzeri", value: "premium" } ] },
+            { id: "os", type: "single", category: "Ekosistem", icon: "fa-mobile", text: "Hangi İşletim Sistemine Alışıksınız?", desc: "Kullandığınız diğer cihazlar (iPad, Galaxy Watch) ile uyum.", options: [ { label: "iOS (Apple)", value: "ios" }, { label: "Android", value: "android" }, { label: "Fark Etmez", value: "any" } ] },
+            { id: "primary_use", type: "multi", category: "Kullanım", icon: "fa-rocket", text: "Telefonu En Çok Ne İçin Kullanırsınız?", desc: "Birden fazla seçebilirsiniz.", options: [ { label: "Sosyal Medya", value: "social" }, { label: "Profesyonel Fotoğraf", value: "photo" }, { label: "Video İçerik Üretimi", value: "video" }, { label: "Ağır Oyunlar", value: "gaming" }, { label: "İş / Finans", value: "business" } ] },
+            
+            // PART 2: Security & Banking
+            { id: "security_pref", type: "single", category: "Güvenlik", icon: "fa-shield-halved", text: "Güvenlik ve Gizlilik Önceliğiniz?", desc: "Bankacılık ve kripto varlıklar için donanım seviyesinde koruma gerekir mi?", options: [ { label: "Çok Yüksek (Secure Enclave/Knox)", value: "high" }, { label: "Standart (Yeterli Olsun)", value: "standard" } ] },
+            { id: "biometric_pref", type: "single", category: "Güvenlik", icon: "fa-fingerprint", text: "Kilit Açma Yöntemi Tercihiniz?", desc: "Hangi yöntem size daha pratik geliyor?", options: [ { label: "Yüz Tanıma (FaceID - En Güvenli)", value: "face" }, { label: "Ekran Altı Parmak İzi", value: "finger" }, { label: "Fark Etmez", value: "any" } ] },
+            { id: "nfc_pay", type: "single", category: "Finans", icon: "fa-credit-card", text: "Mobil Ödeme (NFC) Kullanır mısınız?", desc: "Telefonu kredi kartı yerine kullanmak için.", options: [ { label: "Evet, sürekli kullanırım", value: "yes" }, { label: "Hayır, kullanmam", value: "no" } ] },
+
+            // PART 3: Hardware Details
+            { id: "screen_size", type: "single", category: "Ergonomi", icon: "fa-expand", text: "Ekran Boyutu Tercihiniz?", desc: "Taşınabilirlik mi, seyir zevki mi?", options: [ { label: "Kompakt (Tek el)", value: "compact" }, { label: "Standart (6.4 - 6.6 inç)", value: "standard" }, { label: "Büyük (Max Multimedya)", value: "large" } ] },
+            { id: "screen_tech", type: "single", category: "Ekran", icon: "fa-eye", text: "Ekran Yenileme Hızı (Hz)?", desc: "Akıcılık sizin için ne kadar önemli?", options: [ { label: "120Hz (Çok Akıcı) Şart", value: "120hz" }, { label: "60Hz Yeterli (Standart)", value: "any" } ] },
+            { id: "storage", type: "single", category: "Depolama", icon: "fa-hard-drive", text: "Depolama İhtiyacınız?", desc: "Fotoğraf ve video arşiviniz ne kadar büyük?", options: [ { label: "128 GB (Standart)", value: "128" }, { label: "256 GB (İdeal)", value: "256" }, { label: "512 GB+ (Pro)", value: "512" } ] },
+            
+            // PART 4: Camera Specifics
+            { id: "cam_zoom", type: "single", category: "Kamera", icon: "fa-magnifying-glass-plus", text: "Zoom (Yakınlaştırma) Önemli mi?", desc: "Uzaktaki nesneleri net çekmek ister misiniz?", options: [ { label: "Evet, Telefoto lens olsun", value: "yes" }, { label: "Hayır, ana kamera yeterli", value: "no" } ] },
+            { id: "cam_night", type: "single", category: "Kamera", icon: "fa-moon", text: "Gece Çekimi Performansı?", desc: "Düşük ışıkta net fotoğraflar.", options: [ { label: "Çok Önemli", value: "high" }, { label: "Önemsiz", value: "low" } ] },
+            { id: "cam_video", type: "single", category: "Kamera", icon: "fa-video", text: "Video Sabitleme (OIS)?", desc: "Hareket halindeyken titremeyen videolar.", options: [ { label: "Profesyonel Seviye Gerekli", value: "pro" }, { label: "Standart Yeterli", value: "std" } ] },
+
+            // PART 5: Battery & Charging
+            { id: "battery_type", type: "single", category: "Güç", icon: "fa-battery-full", text: "Batarya Önceliğiniz?", desc: "Uzun süre gitmesi mi, hızlı dolması mı?", options: [ { label: "Uzun Ömür (1.5-2 Gün)", value: "capacity" }, { label: "Süper Hızlı Şarj (20dk tam dolum)", value: "speed" } ] },
+            { id: "wireless_charge", type: "single", category: "Güç", icon: "fa-bolt", text: "Kablosuz Şarj Kullanıyor musunuz?", desc: "Araçta veya masada pratik şarj.", options: [ { label: "Evet, Arıyorum", value: "yes" }, { label: "Hayır", value: "no" } ] },
+
+            // PART 6: Connectivity & Audio
+            { id: "audio_jack", type: "single", category: "Ses", icon: "fa-headphones", text: "3.5mm Kulaklık Girişi Şart mı?", desc: "Çoğu yeni modelde artık bulunmuyor.", options: [ { label: "Evet, Kesinlikle", value: "yes" }, { label: "Hayır, Bluetooth kullanıyorum", value: "no" } ] },
+            { id: "esim", type: "single", category: "Bağlantı", icon: "fa-sim-card", text: "eSIM Desteği Lazım mı?", desc: "Yurtdışı seyahatleri veya çift hat için.", options: [ { label: "Evet", value: "yes" }, { label: "Hayır", value: "no" } ] },
+            
+            // PART 7: Longevity & Brand
+            { id: "lifespan", type: "single", category: "Yatırım", icon: "fa-calendar-check", text: "Telefonu Kaç Yıl Kullanacaksınız?", desc: "Güncelleme garantisi buna göre seçilir.", options: [ { label: "1-2 Yıl", value: "1" }, { label: "3-4 Yıl", value: "3" }, { label: "5+ Yıl", value: "5" } ] },
+            { id: "durability", type: "single", category: "Dayanıklılık", icon: "fa-person-falling", text: "Telefonu Düşürme Sıklığınız?", desc: "Malzeme kalitesi (Plastik vs Titanyum).", options: [ { label: "Çok dikkatliyim", value: "low" }, { label: "Sık düşürürüm", value: "high" } ] },
+            { id: "resale", type: "single", category: "Ekonomi", icon: "fa-hand-holding-dollar", text: "İkinci El Değeri Önemli mi?", desc: "Satarken para etsin mi?", options: [ { label: "Evet, Yatırım gibi görüyorum", value: "yes" }, { label: "Hayır, bozulana kadar kullanırım", value: "no" } ] },
+            { id: "ai_features", type: "single", category: "Yapay Zeka", icon: "fa-wand-magic-sparkles", text: "Yapay Zeka (AI) Özellikleri?", desc: "Canlı çeviri, fotoğraftan nesne silme vb.", options: [ { label: "Çok İlgimi Çekiyor", value: "high" }, { label: "Gereksiz", value: "low" } ] },
+
+            // PART 8: NEW QUESTIONS (Total 25)
+            { id: "water_resist", type: "single", category: "Dayanıklılık", icon: "fa-water", text: "Suya Dayanıklılık (IP68)?", desc: "Telefonla havuz kenarına/denize gider misiniz?", options: [ { label: "Çok Önemli (Tam Koruma)", value: "high" }, { label: "Yağmur Sıçraması Yeterli", value: "low" } ] },
+            { id: "box_content", type: "single", category: "Kutu İçeriği", icon: "fa-box-open", text: "Şarj Aleti Kutudan Çıkmalı mı?", desc: "Ekstra para vermek istemiyorum.", options: [ { label: "Evet, Kutu dolu gelmeli", value: "full" }, { label: "Hayır, evde var / alırım", value: "any" } ] },
+            { id: "build_material", type: "single", category: "Tasarım", icon: "fa-gem", text: "Kasa Materyali Tercihiniz?", desc: "Premium hissiyat mı hafiflik mi?", options: [ { label: "Cam/Metal (Premium His)", value: "premium" }, { label: "Plastik/Polikarbon (Hafif/Kırılmaz)", value: "light" } ] },
+            { id: "speakers", type: "single", category: "Ses", icon: "fa-volume-high", text: "Hoparlör Kalitesi (Stereo)?", desc: "Kulaklıksız film izler misiniz?", options: [ { label: "Evet, Ses çok önemli", value: "high" }, { label: "Hayır, kulaklık kullanırım", value: "low" } ] },
+            { id: "service", type: "single", category: "Servis", icon: "fa-screwdriver-wrench", text: "Yetkili Servis Ağı Önemli mi?", desc: "Bozulursa kolay tamir edilsin.", options: [ { label: "Evet, her yerde servisi olsun", value: "high" }, { label: "Hayır, garanti çok dert değil", value: "low" } ] }
+        ];
+
+        // State
+        let currentStep = 0;
+        let answers = {};
+        
+        // --- UI LOGIC ---
+
+        function startAnalysis() {
+            document.getElementById('view-welcome').classList.add('hidden');
+            document.getElementById('view-quiz').classList.remove('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentStep];
+            
+            document.getElementById('q-category').innerText = q.category;
+            document.getElementById('q-icon').className = `fa-solid ${q.icon}`;
+            document.getElementById('q-text').innerText = q.text;
+            document.getElementById('q-desc').innerText = q.desc;
+            
+            const multiHint = document.getElementById('q-multi-hint');
+            const nextBtn = document.getElementById('btn-next');
+            
+            if(q.type === 'multi') {
+                multiHint.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                multiHint.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            }
+
+            const progress = ((currentStep) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-percent').innerText = `${Math.round(progress)}%`;
+            document.getElementById('progress-step-text').innerText = `Adım ${currentStep + 1}/${questions.length}`;
+
+            // Context List Highlight
+            const contextList = document.getElementById('context-list');
+            // Simplified logic for demo visuals
+
+            const container = document.getElementById('options-grid');
+            container.innerHTML = '';
+
+            const currentAnswers = answers[q.id] || [];
+
+            q.options.forEach(opt => {
+                const isSelected = Array.isArray(currentAnswers) ? currentAnswers.includes(opt.value) : currentAnswers === opt.value;
+                const btn = document.createElement('div');
+                btn.className = `option-card p-4 md:p-5 rounded-xl cursor-pointer bg-white relative overflow-hidden flex items-center justify-between ${isSelected ? 'selected' : ''}`;
+                btn.innerHTML = `
+                    <div>
+                        <span class="font-bold text-slate-700 block text-sm md:text-base">${opt.label}</span>
+                    </div>
+                    <div class="option-checkbox w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shrink-0">
+                        ${isSelected ? '<i class="fa-solid fa-check text-blue-600 text-xs"></i>' : ''}
+                    </div>
+                `;
+                btn.onclick = () => handleOptionClick(q, opt.value, btn);
+                container.appendChild(btn);
+            });
+
+            const prevBtn = document.getElementById('btn-prev');
+            if (currentStep > 0) prevBtn.classList.remove('hidden');
+            else prevBtn.classList.add('hidden');
+            
+            // Scroll to top of questions area on mobile
+            const contentArea = document.getElementById('content-area');
+            contentArea.scrollTop = 0;
+        }
+
+        function handleOptionClick(question, value, element) {
+            if (question.type === 'single') {
+                document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+                element.classList.add('selected');
+                answers[question.id] = value;
+                setTimeout(nextStep, 250);
+            } else {
+                if (!answers[question.id]) answers[question.id] = [];
+                const index = answers[question.id].indexOf(value);
+                if (index > -1) {
+                    answers[question.id].splice(index, 1);
+                    element.classList.remove('selected');
+                    element.querySelector('.option-checkbox').innerHTML = '';
+                } else {
+                    answers[question.id].push(value);
+                    element.classList.add('selected');
+                    element.querySelector('.option-checkbox').innerHTML = '<i class="fa-solid fa-check text-blue-600 text-xs"></i>';
+                }
+            }
+        }
+
+        function nextStep() {
+            const q = questions[currentStep];
+            if (q.type === 'multi' && (!answers[q.id] || answers[q.id].length === 0)) {
+                alert("Lütfen en az bir seçenek işaretleyin.");
+                return;
+            }
+            if (currentStep < questions.length - 1) {
+                currentStep++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderQuestion();
+            }
+        }
+
+        // --- SIMULATION & ALGORITHM ---
+
+        function finishQuiz() {
+            document.getElementById('view-quiz').classList.add('hidden');
+            document.getElementById('view-loading').classList.remove('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+
+            const logContainer = document.getElementById('console-log');
+            const logs = [
+                "Biyometrik güvenlik profili doğrulanıyor...",
+                "Bankacılık uygulamaları uyumluluğu taranıyor...",
+                "Global fiyat veritabanı senkronize ediliyor...",
+                "Kamera sensör verileri işleniyor...",
+                "Donanım şifreleme modülleri (Knox/Secure Enclave) kontrol ediliyor...",
+                "Suya dayanıklılık test raporları inceleniyor...",
+                "Servis ağı yoğunluk haritası çıkarılıyor...",
+                "Sonuç raporu derleniyor..."
+            ];
+
+            let delay = 0;
+            logs.forEach((log) => {
+                setTimeout(() => {
+                    logContainer.innerHTML += `<div class="typing-cursor mb-1 text-green-400">> ${log}</div>`;
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }, delay);
+                delay += 700; 
+            });
+
+            setTimeout(runAlgorithm, delay + 500);
+        }
+
+        async function fetchWikiSummary(phoneName) {
+            const wikiBox = document.getElementById('wiki-box');
+            const wikiText = document.getElementById('wiki-summary');
+            const searchQuery = phoneName.replace(' 5G', '').split('/')[0].trim();
+            const endpoint = `https://tr.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&origin=*&titles=${encodeURIComponent(searchQuery)}`;
+
+            try {
+                wikiBox.classList.remove('hidden');
+                wikiText.innerText = "Wikipedia veritabanından bilgi çekiliyor...";
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if(pageId === "-1") {
+                     wikiText.innerText = "Bu model için Wikipedia'da Türkçe özet bulunamadı. Teknik detayları aşağıda inceleyebilirsiniz.";
+                } else {
+                    let extract = pages[pageId].extract;
+                    let plainText = extract.replace(/<\/?[^>]+(>|$)/g, "").substring(0, 300) + "...";
+                    wikiText.innerText = plainText;
+                }
+            } catch (error) {
+                wikiText.innerText = "Bağlantı hatası nedeniyle Wikipedia verisi alınamadı.";
+            }
+        }
+
+        function runAlgorithm() {
+            // Live Price Simulation
+            const liveCandidates = phoneDatabase.map(phone => {
+                const fluctuation = 1 + ((Math.random() * 0.1) - 0.05);
+                const livePrice = Math.round(phone.basePrice * fluctuation);
+                return { ...phone, livePrice: livePrice, score: 0 };
+            });
+
+            liveCandidates.forEach(phone => {
+                let score = 0;
+                
+                // Existing Logic (Simplified for brevity, but logically same)
+                let budgetLimit = 999999;
+                let budgetMin = 0;
+                if(answers.budget === 'low') budgetLimit = 20000;
+                else if(answers.budget === 'mid') { budgetMin = 15000; budgetLimit = 35000; }
+                else if(answers.budget === 'high') { budgetMin = 30000; budgetLimit = 60000; }
+                else if(answers.budget === 'premium') budgetMin = 50000;
+
+                if (phone.livePrice <= budgetLimit && phone.livePrice >= budgetMin * 0.8) {
+                    score += 100;
+                    if(phone.livePrice < budgetLimit * 0.9) score += 10;
+                } else if (phone.livePrice > budgetLimit) {
+                    score -= (phone.livePrice - budgetLimit) / 100;
+                } else {
+                    score -= 50;
+                }
+
+                if (answers.os !== 'any') {
+                    if (phone.os === answers.os) score += 150;
+                    else score -= 150;
+                }
+
+                const uses = answers.primary_use || [];
+                if (uses.includes('photo')) score += phone.scores.camera_photo * 5;
+                if (uses.includes('video')) score += phone.scores.camera_video * 6;
+                if (uses.includes('gaming')) score += phone.scores.performance * 6;
+                if (uses.includes('business')) {
+                    score += phone.scores.battery * 4;
+                    score += phone.scores.security * 5;
+                }
+
+                if (answers.security_pref === 'high') {
+                    if (phone.features.includes('secure_enclave') || phone.features.includes('knox') || phone.features.includes('knox_vault')) score += 80;
+                    else score -= 50;
+                }
+                
+                if (answers.biometric_pref === 'face') {
+                    if (phone.features.includes('face_id') || phone.features.includes('face_id_3d')) score += 100;
+                    else score -= 30;
+                } else if (answers.biometric_pref === 'finger') {
+                    if (phone.features.includes('finger_ultra') || phone.features.includes('finger_optical')) score += 50;
+                    if (phone.features.includes('face_id')) score -= 20;
+                }
+
+                if (answers.nfc_pay === 'yes') {
+                    if (!phone.features.includes('nfc')) score -= 200;
+                }
+
+                const reqStorage = parseInt(answers.storage);
+                if (phone.specs.storage < reqStorage) score -= 200;
+                if (phone.specs.storage > reqStorage) score += 20;
+
+                if (answers.cam_zoom === 'yes') {
+                    if (phone.features.includes('5x_zoom') || phone.features.includes('telephoto')) score += 60;
+                    else score -= 40;
+                }
+                if (answers.cam_night === 'high') score += phone.scores.camera_photo * 3;
+
+                if (answers.battery_type === 'speed') {
+                    if(phone.features.includes('fast_charge')) score += 70;
+                    else if(phone.brand === 'Apple' || phone.brand === 'Samsung') score -= 30;
+                } else {
+                    score += phone.scores.battery * 5;
+                }
+                
+                if (answers.wireless_charge === 'yes') {
+                    if(phone.features.includes('wireless_charge')) score += 50;
+                    else score -= 50;
+                }
+
+                if (answers.audio_jack === 'yes') {
+                    if(phone.features.includes('jack')) score += 100;
+                    else score -= 100;
+                }
+                
+                if (answers.esim === 'yes') {
+                    if(!phone.features.includes('esim')) score -= 100;
+                }
+
+                if (answers.screen_tech === '120hz') {
+                    if(phone.specs.screen.includes('60Hz')) score -= 200;
+                }
+
+                if (answers.ai_features === 'high') {
+                    if(phone.features.includes('ai')) score += 70;
+                }
+                
+                if (answers.lifespan === '5') {
+                    score += phone.updatePolicy * 15;
+                    score += phone.scores.security * 5;
+                }
+
+                // NEW QUESTIONS LOGIC
+                if (answers.water_resist === 'high') {
+                    if(phone.features.includes('water_ip68')) score += 60;
+                    else score -= 30;
+                }
+
+                if (answers.box_content === 'full') {
+                    if(phone.features.includes('charger_included')) score += 80;
+                    else score -= 40; // Apple/Samsung penalty
+                }
+
+                if (answers.build_material === 'premium') {
+                    if(phone.features.includes('premium_build')) score += 50;
+                    else score -= 30;
+                } else {
+                    if(!phone.features.includes('premium_build')) score += 30; // Prefers light/plastic
+                }
+
+                if (answers.speakers === 'high') {
+                    score += phone.scores.audio * 6;
+                }
+
+                if (answers.service === 'high') {
+                    score += phone.scores.service * 8;
+                }
+
+                phone.finalScore = score;
+            });
+
+            liveCandidates.sort((a, b) => b.finalScore - a.finalScore);
+            const winner = liveCandidates[0];
+            const runnersUp = liveCandidates.slice(1, 4);
+
+            showResults(winner, runnersUp);
+        }
+
+        function showResults(winner, runnersUp) {
+            document.getElementById('view-loading').classList.add('hidden');
+            const resultView = document.getElementById('view-results');
+            resultView.classList.remove('hidden');
+
+            // --- Scroll Progress Logic ---
+            const scrollContainer = document.getElementById('result-scroll-container');
+            const scrollBar = document.getElementById('result-scroll-bar');
+            scrollContainer.classList.remove('hidden'); // Show container
+
+            const contentArea = document.getElementById('content-area');
+            
+            // Remove any existing listeners to avoid duplicates
+            contentArea.onscroll = function() {
+                const scrollTop = contentArea.scrollTop;
+                const scrollHeight = contentArea.scrollHeight - contentArea.clientHeight;
+                const scrollPercent = (scrollTop / scrollHeight) * 100;
+                scrollBar.style.width = scrollPercent + '%';
+            };
+
+
+            // --- POPULATE UI ---
+            document.getElementById('res-brand').innerText = winner.brand;
+            document.getElementById('res-name').innerText = winner.name;
+            document.getElementById('res-price').innerText = winner.livePrice.toLocaleString('tr-TR') + ' TL';
+            
+            if(winner.image) document.getElementById('res-image').src = winner.image;
+            fetchWikiSummary(winner.name);
+            
+            // Security Badge Logic
+            const secBox = document.getElementById('security-check-box');
+            if(winner.features.includes('secure_enclave') || winner.features.includes('knox') || winner.features.includes('knox_vault')) {
+                secBox.classList.remove('hidden');
+            } else {
+                secBox.classList.add('hidden');
+            }
+
+            // Reasoning
+            const uses = answers.primary_use || [];
+            let reason = `Sistemimiz 25 kritik veri noktasını analiz etti. `;
+            
+            if (answers.security_pref === 'high') {
+                reason += `Özellikle <strong>yüksek güvenlik</strong> talebiniz için cihazın ${winner.features.includes('knox') ? 'Samsung Knox' : 'Secure Enclave'} donanımı belirleyici oldu. `;
+            }
+            if (uses.includes('photo')) reason += `${winner.scores.camera_photo}/10 puanlık kamera performansı ile fotoğrafçılık ihtiyaçlarınızı karşılıyor. `;
+            if (answers.box_content === 'full' && winner.features.includes('charger_included')) reason += `Kutu içeriğinin zengin olması (Şarj aleti vb.) seçimde etkili oldu. `;
+            
+            reason += `<strong>${winner.updatePolicy} yıl güncelleme garantisi</strong> ve ${winner.scores.service}/10 servis ağı puanı ile uzun ömürlü bir yatırım.`;
+            
+            document.getElementById('res-reason').innerHTML = reason;
+
+            // Specs Table
+            const specBody = document.getElementById('specs-table-body');
+            const ds = winner.detailedSpecs;
+            const specRows = [
+                { k: "Güvenlik Çipi", v: winner.features.includes('knox') ? "Samsung Knox" : (winner.features.includes('secure_enclave') ? "Apple Secure Enclave" : "Standart") },
+                { k: "İşlemci", v: ds.chipset },
+                { k: "Ekran", v: `${ds.screenRes}, ${ds.brightness}` },
+                { k: "Kamera", v: ds.cameraMain },
+                { k: "Batarya", v: `${winner.specs.battery} / ${winner.specs.charge}` },
+                { k: "Gövde", v: ds.build },
+            ];
+
+            specBody.innerHTML = specRows.map(row => `
+                <tr class="border-b border-slate-100">
+                    <td class="px-6 py-4 font-medium text-slate-800">${row.k}</td>
+                    <td class="px-6 py-4 font-mono text-blue-600">${row.v}</td>
+                </tr>
+            `).join('');
+
+            // Sentiment
+            const sentimentScore = (winner.sentiment.base / 20) + (Math.random() * 0.2 - 0.1);
+            document.getElementById('sentiment-score').innerText = sentimentScore.toFixed(1);
+            document.getElementById('sentiment-bar').style.width = winner.sentiment.base + '%';
+            document.getElementById('sentiment-pos-val').innerText = winner.sentiment.base + '%';
+            document.getElementById('sentiment-pros').innerText = winner.sentiment.pros;
+            document.getElementById('sentiment-cons').innerText = winner.sentiment.cons;
+
+            // Alternatives
+            const altGrid = document.getElementById('alternatives-grid');
+            altGrid.innerHTML = '';
+            
+            runnersUp.forEach(alt => {
+                const matchRate = Math.round((alt.finalScore / winner.finalScore) * 100);
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl border border-slate-200 hover:shadow-lg transition-all flex flex-col items-center text-center";
+                card.innerHTML = `
+                    <div class="w-full flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-slate-400 uppercase">${alt.brand}</div>
+                        <div class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">%${matchRate} Uyum</div>
+                    </div>
+                    <img src="${alt.image}" class="h-24 w-auto object-contain mb-3 mix-blend-multiply" onerror="this.src='https://cdn-icons-png.flaticon.com/512/644/644458.png'">
+                    <h4 class="font-bold text-slate-900 mb-1 text-sm">${alt.name}</h4>
+                    <p class="text-slate-600 text-xs mb-3 font-medium">${alt.livePrice.toLocaleString('tr-TR')} TL</p>
+                `;
+                altGrid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
